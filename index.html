@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Log</title>
+<meta name="description" content="Daily workout and meal log for the training &amp; nutrition plan.">
+<meta name="theme-color" content="#0B1015">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/app.css">
+</head><body>
+
+<header class="bar"><div class="bar-in">
+  <a class="brand" href="#" aria-label="Training log">TRAINING<em>LOG</em></a>
+  <nav class="tabs" role="tablist">
+    <button data-view="log" class="is-on">Log</button>
+    <button data-view="heatmap">Heatmap</button>
+    <button data-view="progress">Progress</button>
+    <button data-view="data">Data</button>
+  </nav>
+  <a class="plan-link" href="training-nutrition-plan.html">The plan &rarr;</a>
+</div></header>
+
+<main class="wrap">
+
+<!-- ============ LOG ============ -->
+<section class="view" id="view-log">
+  <div class="date-row">
+    <button id="prev" aria-label="Previous day">‹</button>
+    <div class="date-mid">
+      <h2 id="log-title">Today</h2>
+      <p id="log-sub"></p>
+      <input type="date" id="log-date" aria-label="Pick a date">
+    </div>
+    <button id="next" aria-label="Next day">›</button>
+    <button id="today" class="btn-sm">Today</button>
+  </div>
+
+  <div id="session" class="card"></div>
+
+  <div class="blk-head"><h3>Training</h3><p id="work-sum"></p></div>
+  <div id="exercises"></div>
+
+  <form id="add-ex" class="card add-row">
+    <label class="fld grow"><span>Add an exercise</span><input name="exname" placeholder="e.g. Leg Press" autocomplete="off"></label>
+    <label class="fld"><span>sets</span><input name="exsets" type="number" min="1" max="12" value="3" inputmode="numeric"></label>
+    <label class="fld"><span>reps</span><input name="exreps" placeholder="10" autocomplete="off"></label>
+    <button class="btn">Add</button>
+  </form>
+
+  <div class="blk-head"><h3>Eating</h3><p>Tap a planned meal to log it, then correct the numbers if you ate something else.</p></div>
+  <div id="kcal-sum" class="card"></div>
+  <div id="meal-presets" class="chips"></div>
+  <ul id="meals" class="meal-list"></ul>
+
+  <form id="add-meal" class="card add-row">
+    <label class="fld grow"><span>Add a meal</span><input name="mname" placeholder="e.g. Kebab after the match" autocomplete="off"></label>
+    <label class="fld"><span>kcal</span><input name="mkcal" type="number" min="0" step="10" placeholder="0" inputmode="numeric"></label>
+    <label class="fld"><span>protein g</span><input name="mprot" type="number" min="0" step="1" placeholder="0" inputmode="numeric"></label>
+    <button class="btn">Add</button>
+  </form>
+
+  <details class="card swaps-card">
+    <summary>Food swaps</summary>
+    <dl id="swaps" class="swaps"></dl>
+  </details>
+
+  <div class="blk-head"><h3>Body</h3><p>Weigh in Sunday morning before eating. Waist at the navel, every two weeks.</p></div>
+  <div class="card body-row">
+    <label class="fld"><span>Weight kg</span><input type="number" id="f-weight" step="0.1" min="0" inputmode="decimal"></label>
+    <label class="fld"><span>Waist cm</span><input type="number" id="f-waist" step="0.5" min="0" inputmode="decimal"></label>
+    <label class="fld grow"><span>Note</span><input type="text" id="f-note" placeholder="How it felt, niggles, sleep…" autocomplete="off"></label>
+  </div>
+</section>
+
+<!-- ============ HEATMAP ============ -->
+<section class="view" id="view-heatmap" hidden>
+  <div class="blk-head"><h2>The last year</h2>
+    <p>One square per day. Click a square to open that day's log.</p></div>
+
+  <div class="filter-row" id="metric-pick" role="group" aria-label="Heatmap metric">
+    <button data-metric="sets" class="is-on">Sets completed</button>
+    <button data-metric="volume">Volume lifted</button>
+    <button data-metric="kcal">Calories vs target</button>
+  </div>
+
+  <div class="card">
+    <div class="heat-scroll"><div id="heat"></div></div>
+    <div class="heat-legend" id="heat-legend"></div>
+  </div>
+
+  <dl class="stats" id="heat-stats"></dl>
+
+  <details class="card">
+    <summary>Every logged day, as a table</summary>
+    <div class="tbl" id="heat-table"></div>
+  </details>
+</section>
+
+<!-- ============ PROGRESS ============ -->
+<section class="view" id="view-progress" hidden>
+  <div class="hero" id="hero"></div>
+
+  <div class="blk-head"><h3>Bodyweight</h3>
+    <p>Compare weekly points, not day to day. Flat weight with climbing lifts is recomposition working.</p></div>
+  <div class="card"><div id="chart-weight"></div></div>
+
+  <div class="blk-head"><h3>Waist</h3>
+    <p>In a recomposition the tape moves before the scale does.</p></div>
+  <div class="card"><div id="chart-waist"></div></div>
+
+  <div class="blk-head"><h3>Volume per week</h3>
+    <p>Weight × reps across every completed set. If this is not trending up, nothing else matters.</p></div>
+  <div class="card"><div id="chart-volume"></div></div>
+
+  <div class="blk-head"><h3>Lifts</h3><p>Your best set on every exercise you have logged.</p></div>
+  <div class="card tbl" id="lifts"></div>
+</section>
+
+<!-- ============ DATA ============ -->
+<section class="view" id="view-data" hidden>
+  <div class="blk-head"><h2>Your data</h2>
+    <p>The log is saved in this browser only — nothing is uploaded anywhere. Clearing site data or
+       switching device or browser loses it, so export a copy now and then.</p></div>
+  <div class="card">
+    <p id="data-sum" class="data-sum"></p>
+    <div class="add-row">
+      <button class="btn" id="export">Export JSON</button>
+      <label class="btn btn-ghost">Import JSON<input type="file" id="import" accept="application/json" hidden></label>
+      <button class="btn btn-danger" id="wipe">Delete everything</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot"><div class="wrap">
+  <p>Logs against the <a href="training-nutrition-plan.html">training &amp; nutrition plan</a>.
+     Estimates, not medical advice.</p>
+</div></footer>
+
+<script src="assets/js/plan.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/app.js"></script>
+</body></html>
