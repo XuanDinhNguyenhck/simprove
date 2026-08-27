@@ -210,3 +210,22 @@ text.ax-em{fill:var(--chalk);font:500 11px var(--mono)}
   .plan-link{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- backup panel ---- */
+.bk-status{margin:0 0 14px;font-size:13.5px;padding:9px 12px;border-radius:4px;border-left:3px solid var(--line)}
+.bk-status.bk-good{border-left-color:var(--pitch);background:#16221D;color:var(--chalk)}
+.bk-status.bk-bad{border-left-color:var(--danger);background:#241713;color:var(--chalk)}
+.bk-status.bk-off{border-left-color:var(--rest);background:var(--panel2);color:var(--mute)}
+.bk-fields{display:flex;gap:10px;flex-wrap:wrap}
+.bk-fields .fld input,.bk-token input{width:100%;font-family:var(--mono);font-size:13px}
+.bk-fields .fld:not(.grow) input{width:118px}
+.bk-token{margin-top:10px}
+.bk-actions{margin-top:14px}
+.bk-actions .btn:disabled{opacity:.45;cursor:not-allowed}
+.bk-help{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.bk-help ol{margin:12px 0 0;padding-left:20px;color:var(--mute);font-size:13.5px}
+.bk-help li{margin-bottom:7px}
+.bk-help code{font-family:var(--mono);font-size:12.5px;color:var(--chalk);background:var(--panel2);
+  padding:1px 5px;border-radius:3px}
+.bk-help strong{color:var(--chalk);font-weight:500}
+.bk-warn{margin:14px 0 0;font-size:12.5px;color:var(--mute);border-left:2px solid var(--amber);padding-left:10px}

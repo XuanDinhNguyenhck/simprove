@@ -30,7 +30,32 @@ how close you landed to the calorie target. Click any square to open that day.
 set on every lift. The headline number is the weekly rate of weight change, checked
 against the plan's −0.2 to −0.4 kg/week target.
 
-**Data** — export the log to a JSON file, import it back, or wipe it.
+**Data** — export the log to a JSON file, import it back, or wipe it. Also where you set
+up the daily backup.
+
+## Daily backup (optional, recommended on a phone)
+
+Phones throw storage away. iOS clears website data for sites you have not opened in
+about a week, which can silently take your whole training history with it. The backup
+copies the log to a file in a **private** GitHub repo once a day.
+
+1. On github.com create a new **private** repo, e.g. `gym-log-data`, with a README.
+2. **Settings → Developer settings → Personal access tokens → Fine-grained tokens →
+   Generate new token.**
+3. Repository access: **Only select repositories** → `gym-log-data`.
+4. Permissions: **Contents → Read and write**. Nothing else.
+5. Copy the token, open the app's **Data** tab, paste it with the repo name, and press
+   **Save & back up now**.
+
+After that it runs by itself. The panel says when the last backup happened, and says so
+plainly if the token expires.
+
+If the phone ever loses the log, install the app again and press **Restore from
+GitHub**.
+
+The token is stored in your browser only, is never written into an exported log file,
+and is never committed to this repo. Scope it to that one private repo so a leak cannot
+touch anything else.
 
 ## Running it
 

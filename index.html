@@ -121,8 +121,9 @@
 <!-- ============ DATA ============ -->
 <section class="view" id="view-data" hidden>
   <div class="blk-head"><h2>Your data</h2>
-    <p>The log is saved in this browser only — nothing is uploaded anywhere. Clearing site data or
-       switching device or browser loses it, so export a copy now and then.</p></div>
+    <p>The log lives in this browser. Clearing site data, or switching browser or phone, loses it —
+       so either export a copy now and then, or set up the daily backup below and stop thinking
+       about it.</p></div>
   <div class="card">
     <p id="data-sum" class="data-sum"></p>
     <div class="add-row">
@@ -130,6 +131,52 @@
       <label class="btn btn-ghost">Import JSON<input type="file" id="import" accept="application/json" hidden></label>
       <button class="btn btn-danger" id="wipe">Delete everything</button>
     </div>
+  </div>
+
+  <div class="blk-head"><h3>Daily backup to GitHub</h3>
+    <p>Phones throw away website storage — iOS clears it for sites you have not opened in about a
+       week. Point this at a <strong>private</strong> repository and the log copies itself there once a
+       day, so losing the phone is not losing the training history.</p></div>
+
+  <div class="card" id="backup-card">
+    <p class="bk-status" id="bk-status"></p>
+
+    <div class="bk-fields">
+      <label class="fld grow"><span>Private repo</span>
+        <input type="text" id="bk-repo" placeholder="your-username/gym-log-data"
+               autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+      <label class="fld"><span>File</span>
+        <input type="text" id="bk-path" placeholder="log.json" autocomplete="off"
+               autocapitalize="none" spellcheck="false"></label>
+    </div>
+    <label class="fld grow bk-token"><span>Fine-grained token</span>
+      <input type="password" id="bk-token" placeholder="github_pat_…" autocomplete="off"
+             autocapitalize="none" spellcheck="false"></label>
+
+    <div class="add-row bk-actions">
+      <button class="btn" id="bk-save">Save &amp; back up now</button>
+      <button class="btn btn-ghost" id="bk-restore">Restore from GitHub</button>
+      <button class="btn btn-ghost" id="bk-forget">Forget token</button>
+    </div>
+
+    <details class="bk-help">
+      <summary>How to set this up on your phone</summary>
+      <ol>
+        <li>On github.com, create a <strong>new private repository</strong> — call it
+            <code>gym-log-data</code>. Tick “Add a README”, so it is not empty.</li>
+        <li>Go to <strong>Settings → Developer settings → Personal access tokens →
+            Fine-grained tokens → Generate new token</strong>.</li>
+        <li>Repository access: <strong>Only select repositories</strong> → pick
+            <code>gym-log-data</code>. Nothing else.</li>
+        <li>Permissions: <strong>Repository permissions → Contents → Read and write</strong>.
+            Leave every other permission alone.</li>
+        <li>Set an expiry you will remember, generate, and copy the token.</li>
+        <li>Paste it above with the repo name and press <em>Save &amp; back up now</em>.</li>
+      </ol>
+      <p class="bk-warn">The token is kept in this browser only and is never included in an
+         exported log file. Anyone who can unlock this phone can read it, so scope it to the one
+         private repo and nothing more. When it expires, backups stop and this panel says so.</p>
+    </details>
   </div>
 </section>
 
@@ -143,5 +190,6 @@
 <script src="assets/js/plan.js"></script>
 <script src="assets/js/store.js"></script>
 <script src="assets/js/charts.js"></script>
+<script src="assets/js/backup.js"></script>
 <script src="assets/js/app.js"></script>
 </body></html>

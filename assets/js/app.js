@@ -445,6 +445,84 @@ function renderData() {
   $('#data-sum').textContent = days.length
     ? `${days.length} days logged, ${days[0]} to ${days[days.length - 1]}.`
     : 'Nothing logged yet.';
+  renderBackup();
+}
+
+const ago = t => {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 2) return 'just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? '' : 's'} ago`;
+  return `${Math.round(h / 24)} day${Math.round(h / 24) === 1 ? '' : 's'} ago`;
+};
+
+function renderBackup() {
+  const b = Backup.status();
+  const box = $('#bk-status');
+
+  if (!b.configured) {
+    box.className = 'bk-status bk-off';
+    box.textContent = 'Not set up — the log is only on this phone.';
+  } else if (b.lastError) {
+    box.className = 'bk-status bk-bad';
+    box.textContent = `Backup failing: ${b.lastError}`;
+  } else if (!b.lastOk) {
+    box.className = 'bk-status bk-off';
+    box.textContent = `Set up for ${b.repo}, but nothing has been backed up yet.`;
+  } else {
+    box.className = 'bk-status bk-good';
+    box.textContent = `Backed up ${ago(b.lastOk)} to ${b.repo}/${b.path}` +
+      ` · ${(b.lastBytes / 1024).toFixed(1)} KB` +
+      (b.due ? ' · a new backup is due and will run shortly.' : '');
+  }
+
+  /* never re-populate the token box from storage — it stays write-only */
+  if (document.activeElement !== $('#bk-repo')) $('#bk-repo').value = b.repo || '';
+  if (document.activeElement !== $('#bk-path')) $('#bk-path').value = b.path || 'log.json';
+  $('#bk-token').placeholder = b.hasToken ? '•••••••• saved — type to replace' : 'github_pat_…';
+  $('#bk-restore').disabled = !b.configured;
+  $('#bk-forget').disabled = !b.configured;
+}
+
+function wireBackup() {
+  Backup.onChange(() => { if (view === 'data') renderBackup(); });
+
+  $('#bk-save').onclick = async () => {
+    const repo = $('#bk-repo').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
+    const token = $('#bk-token').value.trim();
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { alert('Repository should look like username/gym-log-data'); return; }
+    if (!token && !Backup.status().hasToken) { alert('Paste your fine-grained token first.'); return; }
+    const patch = { repo, path: $('#bk-path').value.trim() || 'log.json' };
+    if (token) patch.token = token;
+    Backup.save(patch);
+    $('#bk-token').value = '';
+    $('#bk-save').disabled = true;
+    $('#bk-save').textContent = 'Backing up…';
+    await Backup.backupNow();
+    $('#bk-save').disabled = false;
+    $('#bk-save').textContent = 'Save & back up now';
+    renderBackup();
+  };
+
+  $('#bk-restore').onclick = async () => {
+    const days = Store.loggedKeys().length;
+    if (!confirm(`Replace the ${days} day${days === 1 ? '' : 's'} on this phone with the copy on GitHub?\n\n` +
+                 'Anything logged here since the last backup is lost.')) return;
+    try {
+      const n = await Backup.restore();
+      render();
+      alert(`Restored ${n} day${n === 1 ? '' : 's'} from GitHub.`);
+    } catch (e) { alert('Could not restore: ' + e.message); }
+  };
+
+  $('#bk-forget').onclick = () => {
+    if (confirm('Remove the token and repo from this phone? The backup on GitHub is left alone.')) {
+      Backup.forget();
+      $('#bk-token').value = '';
+      renderBackup();
+    }
+  };
 }
 
 function download() {
@@ -524,6 +602,9 @@ function boot() {
 
   $('#swaps').innerHTML = PLAN.swaps.map(([k, v]) =>
     `<div class="swap"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+
+  wireBackup();
+  Backup.start();
 
   setView('log');
 }

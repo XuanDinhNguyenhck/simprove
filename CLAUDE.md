@@ -48,6 +48,7 @@ Four classic `<script>` tags, loaded in order, sharing one global lexical scope:
 | `assets/js/plan.js` | `PLAN` — the programme as data |
 | `assets/js/store.js` | `Store` — localStorage read/write and every derived number |
 | `assets/js/charts.js` | `Charts` — SVG heatmap, line, columns |
+| `assets/js/backup.js` | `Backup` — once-a-day push of the log to a private GitHub repo |
 | `assets/js/app.js` | rendering and event wiring |
 
 Load order is a real dependency (`charts.js` calls `Store.parse`, `app.js` needs all
@@ -111,6 +112,28 @@ day's target so overeating does not read as a better day.
 Volume is `kg × reps` over completed sets only, so bodyweight work (pull-ups, dips,
 planks) contributes zero — the lifts table falls back to reps, and the seconds/reps
 unit for a lift comes from `PLAN.byName[name].unit`.
+
+### Backup is one-way, and the token is quarantined
+
+`backup.js` writes the whole log to `log.json` in a private repo via the GitHub
+Contents API (`GET` for the blob sha, then `PUT`). It is **not** sync: the device is
+always the source of truth, and pulling the remote copy back down is a separate,
+explicitly confirmed `Backup.restore()` that overwrites local. There is no merge, which
+is why there is no conflict handling to get wrong.
+
+The credential lives in its own localStorage key (`gym-workout-log/backup-v1`), never in
+`Store.state`. That separation is load-bearing: it is what keeps the token out of
+**Export JSON**, so a user can hand someone their log without handing over repo write
+access. Anything that moves backup config into the log record breaks that guarantee —
+there is a test for it, and it should stay tested.
+
+The token box is write-only in the UI: it is never repopulated from storage, only
+overwritten. `Backup.status()` deliberately reports `hasToken`, not the token.
+
+Backups fire on load if more than 20 hours have passed, on a 10-minute in-page timer so
+a tab left open still backs up, and on `online`. Failures back off for 30 minutes and
+surface as text in the panel rather than a silent retry — an expired token is the
+expected failure and the user must be able to see it.
 
 ## Styling
 
