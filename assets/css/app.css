@@ -292,3 +292,11 @@ body.lb-open{overflow:hidden}
   .fr-b{animation:none;opacity:0}
   .dot{animation:none;opacity:.3}
 }
+
+/* ---- quick single-item chips ---- */
+.chips-label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mute);margin:0 0 8px}
+.chips-sm{gap:6px;margin-bottom:16px}
+.chips-sm .chip{padding:6px 9px;gap:1px}
+.chips-sm .chip-when{font-size:12.5px}
+.chips-sm .chip-n{font-size:10px}

@@ -22,8 +22,15 @@ the whole session if you trained on a different day.
 
 Meals work the same way: the day's planned meals are one tap each, with the calorie
 and protein numbers filled in, and you edit them if you ate something else or type in
-your own. A meter tracks the running total against that day's target — 2,700 kcal on
-football days, 2,450 on gym days, 2,150 on rest days.
+your own. There is also a **snack row** of single items — banana, whey shake, rice cakes — for
+whatever you ate that was not in the plan.
+
+A meter tracks the running total against that day's target — 2,700 kcal on football
+days, 2,150 on gym days, 1,900 on rest days, with 130 g protein every day. Those numbers
+are calculated for 163 cm / 59 kg and sit about 50 kcal under maintenance: near enough to
+maintenance that training, not hunger, drives the change. They are formula estimates
+carrying roughly ±230 kcal of error, so treat the first three weeks as calibration and
+recompute if your weight shifts more than ~3 kg.
 
 Weight, waist and a note sit at the bottom.
 

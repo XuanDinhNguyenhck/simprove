@@ -55,12 +55,34 @@ Load order is a real dependency (`charts.js` calls `Store.parse`, `app.js` needs
 three). There are no modules and no bundler; adding one would be a rewrite, not a
 tweak.
 
+### The nutrition numbers are derived, and both files carry them
+
+Targets are calculated for 163 cm / 59 kg: Mifflin-St Jeor BMR 1,514 kcal, ×1.30 for
+non-exercise activity, plus ~270 kcal for a gym hour and ~710 for a 90-minute match —
+maintenance ≈ 2,325 kcal/day weekly average. The targets average 2,271, i.e. **~50 kcal
+under maintenance, deliberately close to it**: at BMI 22.2 the goal is recomposition,
+not further loss. Protein is fixed at 130 g (2.2 g/kg BW, 2.5 g/kg FFM), fat at 60 g
+(~1 g/kg) as a floor, and carbohydrate absorbs the remainder — that is what makes the
+day types cycle. Recompute if the user's weight moves more than ~3 kg; the derivation is
+commented in `plan.js` above `targets`.
+
+Two invariants worth keeping under test: each day type's **meal presets must sum exactly
+to that day's `kcal` target** (they do, and the calorie meter reading `+0` when you tap
+every chip is the visible proof), and `protein*4 + carbs*4 + fat*9` must equal `kcal`
+within a couple of kcal of integer-gram rounding.
+
+`PLAN.quickFoods` is a flat list of single items (banana, whey shake, …) shown on every
+day type, for the snack that was not in the plan. They push into the same `day.meals`
+array as the presets, so meal indices are shared.
+
 ### `PLAN` is the single source of truth, and it is a transcription
 
 Every exercise, set count, rep range, rest interval, calorie target and preset meal in
 `plan.js` was transcribed by hand from `training-nutrition-plan.html`. **The two files
 can drift.** If you change the programme, change it in both, or the log will be
-scoring against a plan the user is not reading. `PLAN.schedule` is indexed by
+scoring against a plan the user is not reading. That means the hero stats, the three
+macro cards *and* the three meal tables in the plan document, not just `plan.js` — the
+calorie numbers appear in all four places. `PLAN.schedule` is indexed by
 `Date.getDay()` (0 = Sunday), so Tuesday → `push`, Sunday → `rest`.
 
 ### Day records are sparse; the session is re-derived, not copied

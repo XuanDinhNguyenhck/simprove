@@ -319,6 +319,19 @@ function renderMeals(k) {
     renderLog();
   });
 
+  /* single items, for the snack that was not in the plan */
+  $('#quick-foods').innerHTML = PLAN.quickFoods.map((f, i) => `
+    <button class="chip" data-quick="${i}">
+      <span class="chip-when">${esc(f.when)}</span>
+      <span class="chip-n num">${f.kcal} · ${f.protein} P</span>
+    </button>`).join('');
+
+  $$('#quick-foods .chip').forEach(b => b.onclick = () => {
+    const f = PLAN.quickFoods[Number(b.dataset.quick)];
+    Store.edit(k, day => day.meals.push({ when: f.when, kcal: f.kcal, protein: f.protein }));
+    renderLog();
+  });
+
   $('#meals').innerHTML = d.meals.length ? d.meals.map((m, i) => `
     <li class="meal" data-i="${i}">
       <div class="meal-txt">

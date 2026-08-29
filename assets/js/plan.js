@@ -3,19 +3,29 @@
    Edit here to change the programme; the app reads nothing else. */
 
 const PLAN = {
-  athlete: { height_cm: 163, weight_kg: 61, goal: 'recomposition', gym_minutes: 60 },
+  athlete: { height_cm: 163, weight_kg: 59, goal: 'recomposition', gym_minutes: 60 },
 
   /* index = Date.getDay(): 0 = Sunday */
   schedule: ['rest', 'football', 'push', 'pull', 'football', 'mix', 'legs'],
 
-  /* calorie/macro target per kind of day */
+  /* Calorie and macro targets, recalculated for 163 cm / 59 kg.
+     Mifflin-St Jeor BMR 1,514 kcal; x1.30 for non-exercise activity = 1,968; training
+     added per day (39 min lifting at 5 MET + 10 min run at 8 MET = ~270 kcal; a 90 min
+     amateur match at 8 MET = ~710). That puts maintenance near 2,325 kcal/day averaged
+     over the week. The targets below average 2,271 — deliberately only ~50 kcal under,
+     because at BMI 22.2 the goal is recomposition, not further weight loss.
+
+     Protein 130 g = 2.2 g/kg bodyweight and 2.5 g/kg fat-free mass: above Morton's
+     1.6 g/kg breakpoint and inside Helms' 2.3-3.1 g/kg FFM band for a lean athlete in
+     a deficit. Fat is held at 60 g (~1 g/kg) as a floor for hormonal health, and
+     carbohydrate takes whatever is left — which is what makes the days cycle. */
   targets: {
-    football: { kcal: 2700, protein: 130, carbs: 400, fat: 65,
-      why: 'Highest-carb days. Full glycogen stores so you are still sprinting in the last 15 minutes.' },
-    gym: { kcal: 2450, protein: 130, carbs: 335, fat: 65,
-      why: 'Around maintenance. Enough fuel to add weight to the bar, not enough to add fat.' },
-    rest: { kcal: 2150, protein: 135, carbs: 265, fat: 60,
-      why: 'Protein stays high, carbs drop. You are not training, so you do not need the fuel.' }
+    football: { kcal: 2700, protein: 130, carbs: 410, fat: 60,
+      why: 'Highest-carb day at 6.9 g/kg — full glycogen so you are still sprinting in the last 15 minutes. Never cut a match day.' },
+    gym: { kcal: 2150, protein: 130, carbs: 272, fat: 60,
+      why: 'Slightly under maintenance at 4.6 g/kg carbs. Enough to add weight to the bar, not enough to add fat.' },
+    rest: { kcal: 1900, protein: 130, carbs: 210, fat: 60,
+      why: 'Protein and fat hold, carbs drop to 3.6 g/kg. You are not training, so you do not need the fuel.' }
   },
 
   sessions: {
@@ -114,11 +124,11 @@ const PLAN = {
   /* preset meals per day kind — tap to log, then edit the numbers if you ate differently */
   meals: {
     gym: [
-      { when: 'Breakfast', what: '80 g oats cooked in 250 ml semi-skimmed milk, 1 banana, 1 tsp honey', kcal: 520, protein: 22 },
-      { when: 'Lunch', what: '130 g chicken breast, 100 g dry rice (or 300 g potatoes), 200 g vegetables, 1 tsp olive oil', kcal: 700, protein: 50 },
-      { when: 'Pre-workout — 60–90 min before', what: '150 g skyr or Greek yogurt, 1 apple or 2 rice cakes', kcal: 220, protein: 20 },
-      { when: 'Post-workout', what: '30 g whey shake or 500 ml kefir, 1 banana, 2 slices rye bread', kcal: 380, protein: 28 },
-      { when: 'Dinner', what: '140 g salmon, turkey or lean beef, 250 g potatoes or 80 g dry pasta, large salad, 1 tbsp olive oil', kcal: 630, protein: 35 }
+      { when: 'Breakfast', what: '60 g oats cooked in 250 ml semi-skimmed milk, 1 banana', kcal: 450, protein: 20 },
+      { when: 'Lunch', what: '130 g chicken breast, 75 g dry rice (or 250 g potatoes), 200 g vegetables, 1 tsp olive oil', kcal: 600, protein: 48 },
+      { when: 'Pre-workout — 60–90 min before', what: '150 g skyr or Greek yogurt, 1 apple', kcal: 220, protein: 20 },
+      { when: 'Post-workout', what: '30 g whey shake, 1 banana', kcal: 250, protein: 26 },
+      { when: 'Dinner', what: '140 g salmon, turkey or lean beef, 200 g potatoes or 65 g dry pasta, large salad, 1 tbsp olive oil', kcal: 630, protein: 35 }
     ],
     football: [
       { when: 'Breakfast', what: '100 g oats, milk, banana, honey, 1 whole egg', kcal: 600, protein: 26 },
@@ -130,12 +140,31 @@ const PLAN = {
     ],
     rest: [
       { when: 'Breakfast', what: '3 whole eggs, 2 slices rye bread, tomato and cucumber', kcal: 450, protein: 26 },
-      { when: 'Lunch', what: '150 g chicken or fish, 150 g cooked rice or quinoa, large portion of vegetables, 1 tsp olive oil', kcal: 650, protein: 48 },
-      { when: 'Snack', what: '200 g cottage cheese or skyr, 25 g nuts', kcal: 300, protein: 28 },
-      { when: 'Dinner', what: '150 g lean beef or turkey, 200 g potatoes, salad with olive oil', kcal: 600, protein: 40 },
-      { when: 'Optional before bed', what: '250 ml milk or a small casein shake', kcal: 150, protein: 12 }
+      { when: 'Lunch', what: '150 g chicken or fish, 120 g cooked rice or quinoa, large portion of vegetables, 1 tsp olive oil', kcal: 570, protein: 46 },
+      { when: 'Snack', what: '200 g cottage cheese or skyr, 15 g nuts', kcal: 260, protein: 27 },
+      { when: 'Dinner', what: '150 g lean beef or turkey, 180 g potatoes, salad with olive oil', kcal: 520, protein: 40 },
+      { when: 'Optional before bed', what: '200 ml milk or a small casein shake', kcal: 100, protein: 7 }
     ]
   },
+
+  /* Single items for the days that do not go to plan — a snack between lectures, a
+     second breakfast, whatever you actually ate. Standard reference portions. */
+  quickFoods: [
+    { when: 'Banana', kcal: 105, protein: 1 },
+    { when: 'Apple', kcal: 95, protein: 0 },
+    { when: '2 rice cakes', kcal: 70, protein: 1 },
+    { when: '2 slices rye bread', kcal: 160, protein: 6 },
+    { when: '1 whole egg', kcal: 78, protein: 6 },
+    { when: '30 g whey shake', kcal: 120, protein: 24 },
+    { when: '150 g skyr', kcal: 90, protein: 16 },
+    { when: '200 g cottage cheese', kcal: 200, protein: 25 },
+    { when: '500 ml kefir', kcal: 200, protein: 17 },
+    { when: '250 ml milk', kcal: 125, protein: 9 },
+    { when: '100 g chicken breast', kcal: 165, protein: 31 },
+    { when: '25 g nuts', kcal: 155, protein: 5 },
+    { when: '1 tbsp olive oil', kcal: 120, protein: 0 },
+    { when: '1 tbsp honey', kcal: 64, protein: 0 }
+  ],
 
   swaps: [
     ['Protein', 'Chicken ↔ turkey ↔ white fish ↔ lean pork ↔ tofu or tempeh ↔ lentils'],
