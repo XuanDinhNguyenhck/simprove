@@ -10,9 +10,13 @@ browser's `localStorage`.
 ## What it does
 
 **Log** — opens on today and already knows what the day is: Tuesday is Upper Push,
-Saturday is Legs + Core, Sunday is rest. Every planned exercise is laid out with its
-sets, rep range, rest interval and form cue, and each set has a weight box, a reps box
-and a tick. It shows what you lifted the last time you did that exercise, so you know
+Saturday is Legs + Core, Sunday is rest. Every planned exercise shows a looping photo of
+the start and end position, so you can see the movement rather than read about it — tap
+it for a bigger view with the form cue and a link to a video. Each set has a weight box,
+a reps box and a tick.
+
+On football days there is nothing to tick, so you get a **Did you play?** card instead —
+*Played* or *Missed it*. That is what puts match days on the heatmap. It shows what you lifted the last time you did that exercise, so you know
 what to beat. Add a set, skip an exercise, add one that isn't on the plan, or switch
 the whole session if you trained on a different day.
 

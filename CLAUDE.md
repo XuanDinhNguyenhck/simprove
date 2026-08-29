@@ -81,6 +81,10 @@ days['2026-08-25'] = {
 }
 ```
 
+Football days carry no sets, so they record `attended` (`true`/`false`/absent) instead.
+`prune()` must keep a day whose only content is `attended`, or marking a match played
+would be thrown away the moment it was written.
+
 `Store.exercisesFor(k)` re-merges that against `PLAN` at render time. Two things
 follow: editing `plan.js` retroactively changes what past days *display* (the logged
 numbers survive, the surrounding template does not), and `ex[name].sets` is a **sparse
@@ -105,9 +109,12 @@ surface — re-validate if you change them. Heatmap rows are **Monday-first**
 weeks fit the 900 px column without scrolling; enlarging it makes the grid scroll and
 auto-scroll then hides the M/W/F row labels.
 
-Heatmap levels live in `METRICS` in `app.js`: `sets` uses fixed thresholds, `volume` is
-relative to the 90th percentile of the visible year, `kcal` scores *closeness* to the
-day's target so overeating does not read as a better day.
+Heatmap levels live in `METRICS` in `app.js`: `sets` (labelled *Training done*) uses
+fixed set-count thresholds on gym days but scores **attendance** on football days —
+played = 4, missed = 1 — because two of the six training days have no sets and would
+otherwise read as blank. `volume` is relative to the 90th percentile of the visible
+year, `kcal` scores *closeness* to the day's target so overeating does not read as a
+better day.
 
 Volume is `kg × reps` over completed sets only, so bodyweight work (pull-ups, dips,
 planks) contributes zero — the lifts table falls back to reps, and the seconds/reps
@@ -134,6 +141,24 @@ Backups fire on load if more than 20 hours have passed, on a 10-minute in-page t
 a tab left open still backs up, and on `online`. Failures back off for 30 minutes and
 surface as text in the panel rather than a silent retry — an expired token is the
 expected failure and the user must be able to see it.
+
+### Demo photos
+
+`assets/img/<slug>-start.jpg` / `-end.jpg` are the 46 frames extracted from the base64
+`<img>` tags in `training-nutrition-plan.html`, at ~11 KB each. The slug is
+`PLAN.slug(name)` (lowercase, non-alphanumerics to `-`), assigned onto every exercise at
+load, so **renaming an exercise in `plan.js` silently breaks its photos** — rename the
+files to match. Exercises the user adds have no `slug` and render no figure.
+
+The two frames cross-fade with the same `@keyframes flip` the plan uses; `body.still`
+pauses them and is persisted in `prefs.stillDemos`. Tapping a figure opens `#lightbox`
+with the large frames, the form cue and a video search link — a 130 px thumbnail is not
+enough to learn a movement from, which is the whole reason the photos are there.
+
+`#lightbox` needs its own `[hidden]` rule: the element carries `display:flex`, and an
+author `display` declaration beats the `hidden` attribute's UA `display:none`. Without
+it the overlay silently covers the page at 90% opacity — and asserting `.hidden` in a
+test does **not** catch it, since the attribute is set correctly. Check computed style.
 
 ## Styling
 

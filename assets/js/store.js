@@ -61,7 +61,8 @@ const Store = (() => {
     const hasSets = Object.values(d.ex).some(e =>
       e.removed || (e.sets || []).some(s => s.done || s.kg || s.reps));
     const empty = !hasSets && !d.custom.length && !d.meals.length &&
-      d.weight == null && d.waist == null && !d.note && !d.sessionOverride;
+      d.weight == null && d.waist == null && !d.note && !d.sessionOverride &&
+      d.attended == null;
     if (empty) delete state.days[k];
   }
 
@@ -90,6 +91,8 @@ const Store = (() => {
   const volume = k => exercisesFor(k).reduce((v, e) => v + e.logged.reduce(
     (t, s) => t + (s.done ? (Number(s.kg) || 0) * (Number(s.reps) || 0) : 0), 0), 0);
 
+  const sessionKind = k => PLAN.sessions[sessionKey(k)].kind;
+
   const kcal = k => day(k).meals.reduce((t, m) => t + (Number(m.kcal) || 0), 0);
   const protein = k => day(k).meals.reduce((t, m) => t + (Number(m.protein) || 0), 0);
   const target = k => PLAN.targets[PLAN.sessions[sessionKey(k)].kind];
@@ -110,7 +113,7 @@ const Store = (() => {
 
   return {
     get state() { return state; },
-    key, parse, day, edit, sessionKey, exercisesFor, lastTime,
+    key, parse, day, edit, sessionKey, sessionKind, exercisesFor, lastTime,
     doneSets, volume, kcal, protein, target, loggedKeys,
     onChange: fn => listeners.push(fn),
     prefs: (patch) => { Object.assign(state.prefs, patch); save(); },

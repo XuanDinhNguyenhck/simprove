@@ -39,7 +39,11 @@
 
   <div id="session" class="card"></div>
 
-  <div class="blk-head"><h3>Training</h3><p id="work-sum"></p></div>
+  <div class="blk-head blk-head-row">
+    <div><h3>Training</h3><p id="work-sum"></p></div>
+    <button id="anim" class="btn-ghost btn-tiny">Pause demos</button>
+  </div>
+  <div id="attend" class="card" hidden></div>
   <div id="exercises"></div>
 
   <form id="add-ex" class="card add-row">
@@ -80,7 +84,7 @@
     <p>One square per day. Click a square to open that day's log.</p></div>
 
   <div class="filter-row" id="metric-pick" role="group" aria-label="Heatmap metric">
-    <button data-metric="sets" class="is-on">Sets completed</button>
+    <button data-metric="sets" class="is-on">Training done</button>
     <button data-metric="volume">Volume lifted</button>
     <button data-metric="kcal">Calories vs target</button>
   </div>
@@ -181,6 +185,8 @@
 </section>
 
 </main>
+
+<div id="lightbox" hidden></div>
 
 <footer class="foot"><div class="wrap">
   <p>Logs against the <a href="training-nutrition-plan.html">training &amp; nutrition plan</a>.

@@ -72,12 +72,18 @@ function renderLog() {
   const list = Store.exercisesFor(k);
   const done = list.reduce((n, e) => n + e.logged.filter(x => x.done).length, 0);
   const planned = list.reduce((n, e) => n + Math.max(e.sets || 0, e.logged.length), 0);
+  const football = Store.sessionKind(k) === 'football';
 
   $('#work-sum').innerHTML = planned
     ? `<b class="num">${done}</b> of <b class="num">${planned}</b> sets · <b class="num">${Charts.compact(Store.volume(k))}</b> kg lifted`
+    : football ? 'Mark the match played or missed so it counts on the heatmap.'
     : 'No lifting scheduled — log anything extra you did below.';
 
+  $('#attend').hidden = !football;
+  if (football) renderAttendance(k);
+
   $('#exercises').innerHTML = list.map(e => exerciseCard(e, k)).join('') || '';
+  $('#anim').hidden = !list.some(e => e.slug);        /* nothing to pause on a football day */
   wireExercises(k);
 
   /* --- meals --- */
@@ -87,6 +93,29 @@ function renderLog() {
   $('#f-weight').value = d.weight ?? '';
   $('#f-waist').value = d.waist ?? '';
   $('#f-note').value = d.note ?? '';
+}
+
+/* Football days have no sets to tick, so without this they could never be marked
+   done and stayed blank on the heatmap. */
+function renderAttendance(k) {
+  const a = Store.day(k).attended;
+  $('#attend').innerHTML = `
+    <div class="att">
+      <div>
+        <h4>Did you play?</h4>
+        <p>${a === true ? 'Logged as played.' : a === false ? 'Logged as missed.'
+             : 'Not logged yet — this day is blank on the heatmap until you answer.'}</p>
+      </div>
+      <div class="att-btns">
+        <button class="att-btn att-yes${a === true ? ' is-on' : ''}" data-att="yes">Played</button>
+        <button class="att-btn att-no${a === false ? ' is-on' : ''}" data-att="no">Missed it</button>
+      </div>
+    </div>`;
+  $$('#attend [data-att]').forEach(b => b.onclick = () => {
+    const want = b.dataset.att === 'yes';
+    Store.edit(k, d => { d.attended = d.attended === want ? undefined : want; });
+    renderLog();
+  });
 }
 
 function exerciseCard(e, k) {
@@ -109,15 +138,20 @@ function exerciseCard(e, k) {
   }
 
   return `<article class="ex" data-ex="${esc(e.name)}">
-    <header class="ex-head">
-      <h4>${esc(e.name)}${e.custom ? '<span class="badge">added</span>' : ''}</h4>
-      <p class="ex-load"><span class="num">${e.sets || '—'}</span> <span class="x">×</span> <span class="num">${esc(e.reps || '')}</span></p>
-    </header>
-    <p class="ex-meta">${esc(e.muscle || 'custom')} · ${esc(e.gear || '')}${e.rest ? ` · <span class="num">${e.rest}</span>s rest` : ''}
-      ${e.superset ? `<span class="tag">superset with ${esc(e.superset)}</span>` : ''}
-      ${e.alt ? `<span class="tag">or ${esc(e.alt)}</span>` : ''}</p>
-    ${last ? `<p class="last">Last on ${esc(Store.parse(last.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }))} —
-       ${last.sets.map(s => `<span class="num">${s.kg || 0}×${s.reps || 0}</span>`).join(' ')}</p>` : ''}
+    <div class="ex-top">
+      ${demo(e)}
+      <div class="ex-info">
+        <header class="ex-head">
+          <h4>${esc(e.name)}${e.custom ? '<span class="badge">added</span>' : ''}</h4>
+          <p class="ex-load"><span class="num">${e.sets || '—'}</span> <span class="x">×</span> <span class="num">${esc(e.reps || '')}</span></p>
+        </header>
+        <p class="ex-meta">${esc(e.muscle || 'custom')} · ${esc(e.gear || '')}${e.rest ? ` · <span class="num">${e.rest}</span>s rest` : ''}
+          ${e.superset ? `<span class="tag">superset with ${esc(e.superset)}</span>` : ''}
+          ${e.alt ? `<span class="tag">or ${esc(e.alt)}</span>` : ''}</p>
+        ${last ? `<p class="last">Last on ${esc(Store.parse(last.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }))} —
+           ${last.sets.map(s => `<span class="num">${s.kg || 0}×${s.reps || 0}</span>`).join(' ')}</p>` : ''}
+      </div>
+    </div>
     <div class="sets">${sets}</div>
     <div class="ex-foot">
       <button class="lnk" data-act="addset">+ set</button>
@@ -128,7 +162,62 @@ function exerciseCard(e, k) {
   </article>`;
 }
 
+/* Start and end frame of the lift, cross-fading. Photos only exist for exercises
+   that came from the plan; anything the user added shows no figure. */
+function demo(e) {
+  if (!e.slug) return '';
+  return `<figure class="demo" data-demo="${esc(e.name)}" tabindex="0" role="button"
+            aria-label="${esc(e.name)} demonstration — tap to enlarge">
+      <img class="fr fr-a" src="assets/img/${e.slug}-start.jpg" alt="" loading="lazy" decoding="async">
+      <img class="fr fr-b" src="assets/img/${e.slug}-end.jpg" alt="" loading="lazy" decoding="async">
+      <figcaption class="demo-cap"><span class="dot"></span>start → end</figcaption>
+    </figure>`;
+}
+
+/* Tapping a figure opens it big with the form cue, because a 130px thumbnail is
+   not enough to learn a movement from. */
+function openDemo(name) {
+  const e = PLAN.byName[name];
+  if (!e) return;
+  const box = $('#lightbox');
+  box.innerHTML = `
+    <div class="lb-inner" role="dialog" aria-modal="true" aria-label="${esc(e.name)}">
+      <button class="lb-x" aria-label="Close">×</button>
+      <figure class="lb-demo">
+        <img class="fr fr-a" src="assets/img/${e.slug}-start.jpg" alt="${esc(e.name)}, start position">
+        <img class="fr fr-b" src="assets/img/${e.slug}-end.jpg" alt="${esc(e.name)}, end position">
+        <figcaption class="demo-cap"><span class="dot"></span>start → end</figcaption>
+      </figure>
+      <div class="lb-txt">
+        <h3>${esc(e.name)}</h3>
+        <p class="ex-load"><span class="num">${e.sets}</span> <span class="x">×</span> <span class="num">${esc(e.reps)}</span>
+           <span class="ex-meta">${esc(e.muscle)} · ${esc(e.gear)} · <span class="num">${e.rest}</span>s rest</span></p>
+        <p class="lb-cue">${esc(e.cue)}</p>
+        ${e.alt ? `<p class="lb-alt"><b>No machine free?</b> ${esc(e.alt)} works instead.</p>` : ''}
+        <a class="btn btn-ghost" target="_blank" rel="noopener"
+           href="https://www.youtube.com/results?search_query=${encodeURIComponent(e.name + ' proper form')}">
+           Watch a video →</a>
+      </div>
+    </div>`;
+  box.hidden = false;
+  document.body.classList.add('lb-open');
+  box.querySelector('.lb-x').focus();
+}
+
+function closeDemo() {
+  $('#lightbox').hidden = true;
+  $('#lightbox').innerHTML = '';
+  document.body.classList.remove('lb-open');
+}
+
 function wireExercises(k) {
+  $$('#exercises .demo').forEach(fig => {
+    fig.onclick = () => openDemo(fig.dataset.demo);
+    fig.onkeydown = ev => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openDemo(fig.dataset.demo); }
+    };
+  });
+
   $$('#exercises .ex').forEach(card => {
     const name = card.dataset.ex;
     const plan = Store.exercisesFor(k).find(x => x.name === name) || {};
@@ -260,9 +349,17 @@ function renderMeals(k) {
 /* ============================ heatmap view ============================ */
 
 const METRICS = {
-  sets:   { label: 'Sets completed', unit: 'sets',
+  sets:   { label: 'Training done', unit: 'sets',
             value: Store.doneSets,
-            level: v => v === 0 ? 0 : v < 6 ? 1 : v < 12 ? 2 : v < 18 ? 3 : 4 },
+            /* Football days have no sets, so they score on attendance instead —
+               otherwise half the training week reads as blank. */
+            level: (v, _, k) => {
+              if (Store.sessionKind(k) === 'football') {
+                const a = Store.day(k).attended;
+                return a === true ? 4 : a === false ? 1 : 0;
+              }
+              return v === 0 ? 0 : v < 6 ? 1 : v < 12 ? 2 : v < 18 ? 3 : 4;
+            } },
   volume: { label: 'Volume lifted', unit: 'kg',
             value: Store.volume,
             level: (v, p90) => v === 0 ? 0 : Math.max(1, Math.min(4, Math.ceil(v / (p90 || v) * 4))) },
@@ -286,18 +383,20 @@ function renderHeatmap() {
 
   const all = [];
   for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) all.push(Store.key(new Date(d)));
-  const values = all.map(k => m.value(k));
-  const p90 = percentile(values.filter(v => v > 0), 0.9);
+  const p90 = percentile(all.map(k => m.value(k)).filter(v => v > 0), 0.9);
 
   const weeks = [];
   all.forEach(k => {
     const row = (Store.parse(k).getDay() + 6) % 7;
     if (row === 0 || !weeks.length) weeks.push([null, null, null, null, null, null, null]);
     const v = m.value(k);
+    const att = Store.day(k).attended;
+    const what = Store.sessionKind(k) === 'football' && Store.state.prefs.metric === 'sets'
+      ? (att === true ? 'played' : att === false ? 'missed the match' : 'not logged')
+      : v ? `${Charts.compact(v)} ${m.unit}` : 'nothing logged';
     weeks[weeks.length - 1][row] = {
       key: k, level: m.level(v, p90, k), today: isToday(k),
-      label: `<b>${dayName(k)}</b><br>${PLAN.sessions[Store.sessionKey(k)].name}<br>
-              ${v ? `${Charts.compact(v)} ${m.unit}` : 'nothing logged'}${
+      label: `<b>${dayName(k)}</b><br>${PLAN.sessions[Store.sessionKey(k)].name}<br>${what}${
               Store.state.prefs.metric === 'kcal' && v ? ` of ${Store.target(k).kcal.toLocaleString()}` : ''}`
     };
   });
@@ -312,7 +411,9 @@ function renderHeatmap() {
   $('#heat-stats').innerHTML = [
     stat('Current streak', streak(), 'days in a row'),
     stat('Days logged', logged.length, 'since ' + (logged[0] ? Store.parse(logged[0]).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—')),
-    stat('Sets this year', values.reduce((a, _, i) => a + Store.doneSets(all[i]), 0), 'completed'),
+    stat('Sets this year', all.reduce((a, k) => a + Store.doneSets(k), 0), 'completed'),
+    stat('Matches played', all.filter(k => Store.day(k).attended === true).length,
+         'of ' + all.filter(k => Store.day(k).attended != null).length + ' logged'),
     stat('Total volume', Charts.compact(all.reduce((a, k) => a + Store.volume(k), 0)), 'kg lifted')
   ].join('');
 
@@ -578,6 +679,16 @@ function boot() {
   $('#f-note').onchange = e => Store.edit(current, d => { d.note = e.target.value.trim() || undefined; });
 
   $$('#metric-pick button').forEach(b => b.onclick = () => { Store.prefs({ metric: b.dataset.metric }); renderHeatmap(); });
+
+  const still = () => {
+    document.body.classList.toggle('still', !!Store.state.prefs.stillDemos);
+    $('#anim').textContent = Store.state.prefs.stillDemos ? 'Play demos' : 'Pause demos';
+  };
+  $('#anim').onclick = () => { Store.prefs({ stillDemos: !Store.state.prefs.stillDemos }); still(); };
+  still();
+
+  $('#lightbox').onclick = e => { if (e.target.id === 'lightbox' || e.target.classList.contains('lb-x')) closeDemo(); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#lightbox').hidden) closeDemo(); });
 
   $('#export').onclick = download;
   $('#import').onchange = e => {

@@ -145,10 +145,14 @@ const PLAN = {
   ]
 };
 
-/* flat lookup so logged history can find an exercise's units and cues by name */
+/* flat lookup so logged history can find an exercise's units, cues and demo
+   photos by name. `slug` is the filename stem under assets/img/ — the photos were
+   extracted from training-nutrition-plan.html, so the two stay in step only as long
+   as the names match. */
+PLAN.slug = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 PLAN.byName = {};
 Object.values(PLAN.sessions).forEach(s =>
-  (s.exercises || []).forEach(e => { PLAN.byName[e.name] = e; }));
+  (s.exercises || []).forEach(e => { e.slug = PLAN.slug(e.name); PLAN.byName[e.name] = e; }));
 
 /* session key for a Date, and the target block that goes with it */
 PLAN.sessionFor = d => PLAN.sessions[PLAN.schedule[d.getDay()]];
