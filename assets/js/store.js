@@ -43,12 +43,12 @@ const Store = (() => {
      template is re-derived from PLAN at render time, so `ex` holds overrides
      keyed by exercise name and `custom` holds anything you added yourself. */
   function day(k) {
-    return state.days[k] || { ex: {}, custom: [], meals: [] };
+    return state.days[k] || { ex: {}, custom: [], meals: [], runs: [] };
   }
 
   function edit(k, fn) {
-    const d = state.days[k] || (state.days[k] = { ex: {}, custom: [], meals: [] });
-    d.ex = d.ex || {}; d.custom = d.custom || []; d.meals = d.meals || [];
+    const d = state.days[k] || (state.days[k] = { ex: {}, custom: [], meals: [], runs: [] });
+    d.ex = d.ex || {}; d.custom = d.custom || []; d.meals = d.meals || []; d.runs = d.runs || [];
     fn(d);
     prune(k);
     save();
@@ -60,7 +60,8 @@ const Store = (() => {
     if (!d) return;
     const hasSets = Object.values(d.ex).some(e =>
       e.removed || (e.sets || []).some(s => s.done || s.kg || s.reps));
-    const empty = !hasSets && !d.custom.length && !d.meals.length &&
+    const hasRuns = Array.isArray(d.runs) && d.runs.length > 0;
+    const empty = !hasSets && !d.custom.length && !d.meals.length && !hasRuns &&
       d.weight == null && d.waist == null && !d.note && !d.sessionOverride &&
       d.attended == null;
     if (empty) delete state.days[k];
@@ -97,6 +98,12 @@ const Store = (() => {
   const protein = k => day(k).meals.reduce((t, m) => t + (Number(m.protein) || 0), 0);
   const target = k => PLAN.targets[PLAN.sessions[sessionKey(k)].kind];
 
+  /* treadmill sessions logged on date k (each session is a separate entry in d.runs) */
+  const runsFor = k => day(k).runs || [];
+  const runKcal = k => runsFor(k).reduce((t, r) => t + (Number(r.calories) || 0), 0);
+  const runKm   = k => runsFor(k).reduce((t, r) => t + (Number(r.distanceKm) || 0), 0);
+  const runSec  = k => runsFor(k).reduce((t, r) => t + (Number(r.durationSec) || 0), 0);
+
   /* every date that has any entry, oldest first */
   const loggedKeys = () => Object.keys(state.days).sort();
 
@@ -114,7 +121,7 @@ const Store = (() => {
   return {
     get state() { return state; },
     key, parse, day, edit, sessionKey, sessionKind, exercisesFor, lastTime,
-    doneSets, volume, kcal, protein, target, loggedKeys,
+    doneSets, volume, kcal, protein, target, runsFor, runKcal, runKm, runSec, loggedKeys,
     onChange: fn => listeners.push(fn),
     prefs: (patch) => { Object.assign(state.prefs, patch); save(); },
     replaceAll(next) {

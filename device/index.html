@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ZIPRO Newlite · Treadmill Controller &amp; Log</title>
+<meta name="description" content="Bluetooth controller and session logger for the ZIPRO Newlite (FitShow) treadmill.">
+<meta name="theme-color" content="#0B1015">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/app.css">
+<link rel="stylesheet" href="css/device.css">
+</head><body>
+
+<header class="bar"><div class="bar-in">
+  <a class="brand" href="../index.html" aria-label="Back to Training Log">&larr; TRAINING<em>LOG</em></a>
+  <span class="eyebrow" style="margin:0">ZIPRO NEWLITE · BLE</span>
+  <a class="plan-link" href="../training-nutrition-plan.html">The plan &rarr;</a>
+</div></header>
+
+<main class="wrap">
+
+  <div class="blk-head">
+    <h2>ZIPRO Newlite</h2>
+    <p>Direct Bluetooth Low Energy controller &amp; automatic session logger for the FitShow (<code>0xFFF0</code>)
+       module. Stand on the side rails with the magnetic safety key attached when starting.</p>
+  </div>
+
+  <!-- Connection Card -->
+  <div class="card">
+    <p class="bk-status bk-off" id="conn-status">Disconnected — turn on the treadmill and close the FitShow app on your phone.</p>
+    <div class="add-row">
+      <button class="btn" id="btn-connect">Connect Bluetooth</button>
+      <button class="btn btn-ghost" id="btn-disconnect" disabled>Disconnect</button>
+      <button class="btn btn-ghost" id="btn-wake" disabled>Wake up / Handshake</button>
+      <button class="btn btn-ghost" id="btn-poll" disabled>Poll status</button>
+      <label class="dev-chk" style="margin-left:auto">
+        <input type="checkbox" id="chk-autopoll" checked> Keep awake (1s poll)
+      </label>
+    </div>
+  </div>
+
+  <!-- Live Telemetry -->
+  <dl class="stats">
+    <div class="stat"><dt>State</dt><dd id="val-state" class="num">—</dd><p>console mode</p></div>
+    <div class="stat"><dt>Speed</dt><dd id="val-speed" class="num">0.0</dd><p>km / h</p></div>
+    <div class="stat"><dt>Elapsed</dt><dd id="val-time" class="num">00:00</dd><p>mm : ss</p></div>
+    <div class="stat"><dt>Distance</dt><dd id="val-dist" class="num">0.00</dd><p>kilometres</p></div>
+    <div class="stat"><dt>Energy</dt><dd id="val-kcal" class="num">0</dd><p>kcal burned</p></div>
+  </dl>
+
+  <!-- Belt & Speed Control -->
+  <div class="blk-head">
+    <h3>Belt &amp; speed</h3>
+    <p>Folded handlebar (walking pad mode) caps at 6.0 km/h; raised handlebar allows up to 10–12 km/h.</p>
+  </div>
+
+  <div class="card">
+    <div class="dev-power">
+      <button class="att-btn att-yes is-on" id="btn-start" disabled>Start belt (ON)</button>
+      <button class="btn btn-danger dev-stop-btn" id="btn-stop" disabled>Stop belt (OFF)</button>
+    </div>
+
+    <div class="dev-slider-row">
+      <button class="btn btn-ghost" id="btn-speed-down" disabled>−0.5</button>
+      <input type="range" id="speed-slider" min="1.0" max="12.0" step="0.5" value="2.0" disabled aria-label="Target speed km/h">
+      <button class="btn btn-ghost" id="btn-speed-up" disabled>+0.5</button>
+      <button class="btn" id="btn-speed-set" disabled>Set <span id="speed-target" class="num">2.0</span> km/h</button>
+    </div>
+
+    <p class="chips-label">Quick speed presets</p>
+    <div class="chips chips-sm" id="speed-presets">
+      <button class="chip" data-speed="1.0" disabled><span class="chip-when num">1.0 km/h</span><span class="chip-n">slow walk</span></button>
+      <button class="chip" data-speed="2.0" disabled><span class="chip-when num">2.0 km/h</span><span class="chip-n">desk walk</span></button>
+      <button class="chip" data-speed="3.0" disabled><span class="chip-when num">3.0 km/h</span><span class="chip-n">light walk</span></button>
+      <button class="chip" data-speed="4.0" disabled><span class="chip-when num">4.0 km/h</span><span class="chip-n">brisk walk</span></button>
+      <button class="chip" data-speed="5.0" disabled><span class="chip-when num">5.0 km/h</span><span class="chip-n">fast walk</span></button>
+      <button class="chip" data-speed="6.0" disabled><span class="chip-when num">6.0 km/h</span><span class="chip-n">flat max</span></button>
+      <button class="chip" data-speed="8.0" disabled><span class="chip-when num">8.0 km/h</span><span class="chip-n">jog</span></button>
+    </div>
+  </div>
+
+  <!-- Speed Profile Chart & Session History -->
+  <div class="blk-head blk-head-row">
+    <div>
+      <h3 id="chart-title">Speed profile</h3>
+      <p>Saves a point only when speed changes. Multiple runs on the same day are stored as separate sessions.</p>
+    </div>
+    <button class="btn btn-ghost" id="btn-save-session" disabled>Save current run</button>
+  </div>
+
+  <div class="card">
+    <div id="speed-chart"></div>
+  </div>
+
+  <!-- Lifetime Stats -->
+  <dl class="stats">
+    <div class="stat"><dt>Logged runs</dt><dd id="tot-runs" class="num">0</dd><p>sessions</p></div>
+    <div class="stat"><dt>Total distance</dt><dd id="tot-km" class="num">0.00</dd><p>kilometres</p></div>
+    <div class="stat"><dt>Total time</dt><dd id="tot-hours" class="num">0.0</dd><p>hours on belt</p></div>
+    <div class="stat"><dt>Total energy</dt><dd id="tot-kcal" class="num">0</dd><p>kcal burned</p></div>
+  </dl>
+
+  <div class="card">
+    <div class="add-row" style="margin-bottom:14px">
+      <button class="btn" id="btn-export-csv">Export CSV</button>
+      <button class="btn btn-ghost" id="btn-export-json">Export JSON</button>
+      <button class="btn btn-danger" id="btn-clear-runs">Clear runs</button>
+      <span class="dev-chk" style="margin-left:auto">Synced with Training Log, Heatmap &amp; GitHub Backup</span>
+    </div>
+    <div class="tbl" id="session-table"></div>
+  </div>
+
+  <!-- Raw Hex Debugger -->
+  <details class="card">
+    <summary>Raw hex tester &amp; BLE packet log</summary>
+    <div class="add-row" style="margin-top:12px">
+      <label class="fld grow"><span>Hex frame</span>
+        <input type="text" id="raw-hex" value="02515103" autocomplete="off" spellcheck="false"></label>
+      <button class="btn btn-ghost" id="btn-raw-send" disabled>Send hex</button>
+      <button class="btn btn-ghost" id="btn-log-clear">Clear</button>
+    </div>
+    <div id="ble-log" class="dev-log"></div>
+  </details>
+
+</main>
+
+<footer class="foot"><div class="wrap">
+  <p>Part of <a href="../index.html">Training Log</a> · Modular BLE architecture ready for Web &amp; Capacitor (iOS / Android).</p>
+</div></footer>
+
+<script src="js/protocol.js"></script>
+<script src="js/ble.js"></script>
+<script src="js/store.js"></script>
+<script src="js/ui.js"></script>
+</body></html>

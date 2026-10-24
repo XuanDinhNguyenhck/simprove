@@ -44,6 +44,11 @@ against the plan's −0.2 to −0.4 kg/week target.
 **Data** — export the log to a JSON file, import it back, or wipe it. Also where you set
 up the daily backup.
 
+**Device (`device/index.html`)** — standalone Bluetooth Low Energy controller and
+session logger for the ZIPRO Newlite (`0xFFF0` FitShow) treadmill, separated into pure
+protocol (`protocol.js`), BLE transport (`ble.js`), session storage (`store.js`), and UI
+(`ui.js`) modules so it works both in the browser and in an iOS/Android Capacitor app.
+
 ## Daily backup (optional, recommended on a phone)
 
 Phones throw storage away. iOS clears website data for sites you have not opened in

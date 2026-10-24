@@ -1,0 +1,77 @@
+/* Treadmill Controller & Session Log styles — extends ../assets/css/app.css
+   with mobile-friendly touch targets and iOS/Android safe-area support. */
+
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.dev-chk {
+  font: 400 13px var(--body);
+  color: var(--mute);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.dev-chk input {
+  accent-color: var(--amber);
+}
+
+.dev-power {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.dev-power button {
+  flex: 1;
+  padding: 15px 18px;
+  font-size: 14.5px;
+}
+.dev-stop-btn {
+  background: #241713;
+  font-weight: 500;
+}
+
+.dev-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.dev-slider-row input[type="range"] {
+  flex: 1;
+  min-width: 140px;
+  accent-color: var(--amber);
+  height: 28px;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#raw-hex {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.dev-log {
+  margin-top: 12px;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 12px;
+  height: 180px;
+  overflow-y: auto;
+  font: 400 12px/1.5 var(--mono);
+}
+.dev-log-tx   { color: var(--amber); }
+.dev-log-rx   { color: var(--pitch); }
+.dev-log-info { color: var(--mute); }
+.dev-log-err  { color: var(--danger); }
+
+.tbl tr.is-selected td {
+  background: var(--panel2);
+}

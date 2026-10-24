@@ -11,6 +11,10 @@ Two static artifacts, served together from GitHub Pages:
   It is the **reference**: read-only prose, its own inline CSS/JS, no dependencies.
 - `index.html` + `assets/` — the **tracker**, which logs sets, meals and body metrics
   against that plan and draws a year heatmap and progress charts.
+- `device/` — a standalone, modular Bluetooth controller and session logger for the
+  ZIPRO Newlite (`0xFFF0` FitShow service) treadmill (`js/protocol.js`, `js/ble.js`,
+  `js/store.js`, `js/ui.js`), structured for both Web Bluetooth and native iOS/Android
+  Capacitor builds.
 
 There is no build step, no package manager, no framework, and no backend. Files are
 served as-is.

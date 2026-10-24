@@ -85,6 +85,7 @@ function renderLog() {
   $('#exercises').innerHTML = list.map(e => exerciseCard(e, k)).join('') || '';
   $('#anim').hidden = !list.some(e => e.slug);        /* nothing to pause on a football day */
   wireExercises(k);
+  renderTreadmillRuns(k);
 
   /* --- meals --- */
   renderMeals(k);
@@ -114,6 +115,38 @@ function renderAttendance(k) {
   $$('#attend [data-att]').forEach(b => b.onclick = () => {
     const want = b.dataset.att === 'yes';
     Store.edit(k, d => { d.attended = d.attended === want ? undefined : want; });
+    renderLog();
+  });
+}
+
+function renderTreadmillRuns(k) {
+  const box = $('#treadmill-runs');
+  if (!box) return;
+  const runs = Store.runsFor(k);
+  box.hidden = !runs.length;
+  if (!runs.length) { box.innerHTML = ''; return; }
+
+  const fmt = sec => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+  box.innerHTML = `
+    <div class="ex-head" style="margin-bottom:8px">
+      <h4>ZIPRO Newlite · Treadmill (${runs.length} session${runs.length === 1 ? '' : 's'})</h4>
+      <a class="lnk" href="device/index.html">Open controller →</a>
+    </div>
+    <ul class="meal-list" style="margin:0">
+      ${runs.map((r, idx) => `
+        <li class="meal">
+          <div class="meal-txt">
+            <span><b>Session #${idx + 1}</b>${r.at ? ` · <span class="num">${esc(r.at)}</span>` : ''}</span>
+            <span class="meal-what num">${fmt(r.durationSec)} · ${Number(r.distanceKm).toFixed(2)} km · avg ${Number(r.avgSpeedKmh).toFixed(1)} km/h (max ${Number(r.maxSpeedKmh).toFixed(1)}) · ${(r.changes || []).length} speed pt${(r.changes || []).length === 1 ? '' : 's'}</span>
+          </div>
+          <span class="num" style="color:var(--amber)">${r.calories || 0} kcal</span>
+          <button class="x" data-delrun="${esc(r.id)}" title="Remove session">×</button>
+        </li>`).join('')}
+    </ul>`;
+
+  $$('#treadmill-runs [data-delrun]').forEach(b => b.onclick = () => {
+    const id = b.dataset.delrun;
+    Store.edit(k, d => { d.runs = (d.runs || []).filter(r => r.id !== id); });
     renderLog();
   });
 }
@@ -301,7 +334,7 @@ function renderMeals(k) {
       </div>
       <div class="meter-track"><div class="meter-fill" style="width:${pct}%"></div></div>
       <div class="meter-top meter-sub">
-        <span>Protein <b class="num">${prot}</b> / ${t.protein} g</span>
+        <span>Protein <b class="num">${prot}</b> / ${t.protein} g${Store.runKcal(k) ? ` · Treadmill <b class="num">−${Store.runKcal(k)}</b> kcal (${Store.runKm(k).toFixed(2)} km)` : ''}</span>
         <span>${esc(t.why)}</span>
       </div>
     </div>`;
@@ -367,11 +400,14 @@ const METRICS = {
             /* Football days have no sets, so they score on attendance instead —
                otherwise half the training week reads as blank. */
             level: (v, _, k) => {
+              const rSec = Store.runSec(k);
+              const rLvl = rSec === 0 ? 0 : rSec < 600 ? 1 : rSec < 1200 ? 2 : rSec < 2100 ? 3 : 4;
               if (Store.sessionKind(k) === 'football') {
                 const a = Store.day(k).attended;
-                return a === true ? 4 : a === false ? 1 : 0;
+                return Math.max(rLvl, a === true ? 4 : a === false ? 1 : 0);
               }
-              return v === 0 ? 0 : v < 6 ? 1 : v < 12 ? 2 : v < 18 ? 3 : 4;
+              const sLvl = v === 0 ? 0 : v < 6 ? 1 : v < 12 ? 2 : v < 18 ? 3 : 4;
+              return Math.max(sLvl, rLvl);
             } },
   volume: { label: 'Volume lifted', unit: 'kg',
             value: Store.volume,
@@ -404,9 +440,11 @@ function renderHeatmap() {
     if (row === 0 || !weeks.length) weeks.push([null, null, null, null, null, null, null]);
     const v = m.value(k);
     const att = Store.day(k).attended;
+    const runs = Store.runsFor(k);
+    const runTxt = runs.length ? ` · ${Store.runKm(k).toFixed(2)} km (${runs.length} run${runs.length === 1 ? '' : 's'})` : '';
     const what = Store.sessionKind(k) === 'football' && Store.state.prefs.metric === 'sets'
-      ? (att === true ? 'played' : att === false ? 'missed the match' : 'not logged')
-      : v ? `${Charts.compact(v)} ${m.unit}` : 'nothing logged';
+      ? (att === true ? 'played' : att === false ? 'missed the match' : (runs.length ? `${Store.runKm(k).toFixed(2)} km treadmill` : 'not logged'))
+      : v ? `${Charts.compact(v)} ${m.unit}${runTxt}` : (runs.length ? `${Store.runKm(k).toFixed(2)} km (${runs.length} run${runs.length === 1 ? '' : 's'})` : 'nothing logged');
     weeks[weeks.length - 1][row] = {
       key: k, level: m.level(v, p90, k), today: isToday(k),
       label: `<b>${dayName(k)}</b><br>${PLAN.sessions[Store.sessionKey(k)].name}<br>${what}${
